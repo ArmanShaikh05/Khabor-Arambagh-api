@@ -1,0 +1,162 @@
+import ErrorHandler from "../middlewares/error.js";
+import { news } from "../models/newsModel.js";
+import fs from "fs";
+
+// CREATE NEWS POST
+
+export const createNews = async (req, res, next) => {
+  try {
+    const { title, summary, content, category, section } = req.body;
+    const file = req.file;
+    let newPath = "";
+    let extension = "";
+    if (file) {
+      const { originalname, path } = req.file;
+      const parts = originalname.split(".");
+      extension = parts[parts.length - 1];
+      newPath = path + "." + extension;
+      fs.renameSync(path, newPath);
+    }
+
+    await news.create({
+      title,
+      summary,
+      content,
+      category,
+      section,
+      image: newPath,
+    });
+    res.json({
+      success: true,
+      message: "News Created Successfully",
+    });
+  } catch (error) {
+    next(new ErrorHandler(error.message, 500));
+  }
+};
+
+// SHOW ALL THE NEWS IN DATABASE
+
+export const showAllNews = async (req, res, next) => {
+  const search = req.query.search ? req.query.search : ""
+  const limit = req.query.limit ? req.query.limit : null;
+  const section = req.query.section ? req.query.section : "";
+  const category = req.query.category ? req.query.category : ""
+
+  const searchFilter = {
+    section: { $regex: section, $options: "i" },
+    category: { $regex: category, $options: "i" },
+    title: { $regex: search, $options: "i" },
+  };
+
+
+  try {
+    const postsData = await news
+      .find(searchFilter)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .exec();
+
+    if (!postsData) return next(new ErrorHandler("No News Found", 404));
+
+    res.json(postsData);
+  } catch (error) {
+    next(new ErrorHandler(error.message, 500));
+  }
+};
+
+
+// SHOW SPECIFIC NEWS DATA
+
+export const getSpecificData = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const specificData = await news.findById(id);
+
+    if (!specificData) return next(new ErrorHandler("News Not Found", 404));
+    res.json(specificData);
+  } catch (error) {
+    next(new ErrorHandler(error.message, 500));
+  }
+};
+
+// UPDATE NEWS DATA
+
+export const updateNewsData = async (req, res, next) => {
+  try {
+    let newPath = null;
+    const id = req.params.id;
+    const { title, summary, content, category, section } = req.body;
+    const file = req.file;
+    if (file) {
+      const { originalname, path } = req.file;
+      const parts = originalname.split(".");
+      const extension = parts[parts.length - 1];
+      newPath = path + "." + extension;
+      fs.renameSync(path, newPath);
+    }
+
+    const newsDoc = await news.findById(id);
+
+    if (!newsDoc) return next(new ErrorHandler("News Not Found", 404));
+
+    await newsDoc.updateOne({
+      title,
+      summary,
+      content,
+      category,
+      section,
+      image: newPath ? newPath : newsDoc.image,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "News Updated Successfully",
+    });
+  } catch (error) {
+    next(new ErrorHandler(error.message, 500));
+  }
+};
+
+// DELETE A SPECIFIC NEWS
+
+export const deleteNews = async (req, res, next) => {
+  try {
+    const deleteNews = await news.findByIdAndDelete(req.params.id);
+    fs.unlinkSync(`./${deleteNews.image}`);
+
+    if (!deleteNews) return next(new ErrorHandler("News Not Found", 404));
+
+    res.status(200).json({
+      success: true,
+      data: `News deleted successfully`,
+    });
+  } catch (error) {
+    next(new ErrorHandler(error.message, 500));
+  }
+};
+
+//SHOW NEWS BY CATEGORY
+
+export const showCategoryNews = async (req, res, next) => {
+  try {
+    const query = req.query;
+    const limit = req.query.limit ? req.query.limit : null;
+
+    const searchFilter = {
+      category: { $regex: query.category, $options: "i" },
+    };
+
+    const postsData = await news
+      .find(searchFilter)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .exec();
+
+    if (!postsData) return next(new ErrorHandler("No News Found", 404));
+
+    res.json(postsData);
+  } catch (error) {
+    next(new ErrorHandler(error.message, 500));
+  }
+};

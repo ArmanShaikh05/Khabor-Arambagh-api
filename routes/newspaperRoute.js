@@ -21,7 +21,7 @@ const router = express.Router()
 
 router.get("/newspaper"  , getNewspapers)
 
-router.post("/create/newspaper", uploadMiddleware.single('newspaper') , createNewspaper)
+router.post("/newspaper/create", uploadMiddleware.single('newspaper') , createNewspaper)
 
 router.delete("/newspaper/delete/:id",uploadMiddleware.single('newspaper') , deleteNewpaper )
 

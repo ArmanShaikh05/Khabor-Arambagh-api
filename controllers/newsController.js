@@ -1,7 +1,6 @@
 import { uploadOnCloudinary } from "../middlewares/cloudinary.js";
 import ErrorHandler from "../middlewares/error.js";
 import { news } from "../models/newsModel.js";
-// import fs from "fs";
 import { v2 as cloudinary } from "cloudinary";
 
 // CREATE NEWS POST
@@ -10,15 +9,6 @@ export const createNews = async (req, res, next) => {
   try {
     const { title, summary, content, category, section } = req.body;
     const file = req.file;
-    // let newPath = "";
-    // let extension = "";
-    // if (file) {
-    //   const { originalname, path } = req.file;
-    //   const parts = originalname.split(".");
-    //   extension = parts[parts.length - 1];
-    //   newPath = path + "." + extension;
-    //   fs.renameSync(path, newPath);
-    // }
 
     const response = await uploadOnCloudinary(file.path);
 
@@ -38,6 +28,10 @@ export const createNews = async (req, res, next) => {
       message: "News Created Successfully",
     });
   } catch (error) {
+    res.json({
+      success:false,
+      message: error.message
+    })
     next(new ErrorHandler(error.message, 500));
   }
 };
@@ -67,6 +61,10 @@ export const showAllNews = async (req, res, next) => {
 
     res.json(postsData);
   } catch (error) {
+    res.json({
+      success:false,
+      message: error.message
+    })
     next(new ErrorHandler(error.message, 500));
   }
 };
@@ -81,6 +79,10 @@ export const getSpecificData = async (req, res, next) => {
     if (!specificData) return next(new ErrorHandler("News Not Found", 404));
     res.json(specificData);
   } catch (error) {
+    res.json({
+      success:false,
+      message: error.message
+    })
     next(new ErrorHandler(error.message, 500));
   }
 };
@@ -89,18 +91,9 @@ export const getSpecificData = async (req, res, next) => {
 
 export const updateNewsData = async (req, res, next) => {
   try {
-    // let newPath = null;
     const id = req.params.id;
     const { title, summary, content, category, section } = req.body;
     const file = req.file;
-    // let response;
-    // if (file) {
-    //   const { originalname, path } = req.file;
-    //   const parts = originalname.split(".");
-    //   const extension = parts[parts.length - 1];
-    //   newPath = path + "." + extension;
-    //   fs.renameSync(path, newPath);
-    // }
 
     const newsDoc = await news.findById(id);
     if (!newsDoc) return next(new ErrorHandler("News Not Found", 404));
@@ -130,6 +123,10 @@ export const updateNewsData = async (req, res, next) => {
       message: "News Updated Successfully",
     });
   } catch (error) {
+    res.json({
+      success:false,
+      message: error.message
+    })
     next(new ErrorHandler(error.message, 500));
   }
 };
@@ -139,7 +136,6 @@ export const updateNewsData = async (req, res, next) => {
 export const deleteNews = async (req, res, next) => {
   try {
     const deleteNews = await news.findByIdAndDelete(req.params.id);
-    // fs.unlinkSync(`./${deleteNews.image}`);
     if (!deleteNews) return next(new ErrorHandler("News Not Found", 404));
 
     const { public_id } = deleteNews.image;
@@ -151,6 +147,10 @@ export const deleteNews = async (req, res, next) => {
       data: `News deleted successfully`,
     });
   } catch (error) {
+    res.json({
+      success:false,
+      message: error.message
+    })
     next(new ErrorHandler(error.message, 500));
   }
 };
@@ -176,6 +176,10 @@ export const showCategoryNews = async (req, res, next) => {
 
     res.json(postsData);
   } catch (error) {
+    res.json({
+      success:false,
+      message: error.message
+    })
     next(new ErrorHandler(error.message, 500));
   }
 };

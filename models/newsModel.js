@@ -15,14 +15,20 @@ const newsSchema = mongoose.Schema({
         required: true,
     },
     image: {
-        type: String,
+        // type: String,
+        url:{
+            type: String,
+        },
+        public_id:{
+            type: String,
+        }
     },
     category: {
         type: Array,
     },
     section : {
         type: String,
-    }
+    },
 },{
     timestamps:true
 });

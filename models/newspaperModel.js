@@ -7,7 +7,12 @@ const newspaperSchema = mongoose.Schema({
         unique: true,
     },
     newspaper: {
-        type: String,
+        url:{
+            type:String,
+        },
+        public_id:{
+            type:String,
+        }
     },
 },{
     timestamps:true

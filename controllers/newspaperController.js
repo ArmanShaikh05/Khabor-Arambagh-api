@@ -1,6 +1,8 @@
+import { uploadPdf } from "../middlewares/cloudinary.js";
 import ErrorHandler from "../middlewares/error.js";
 import { newspaper } from "../models/newspaperModel.js";
 import fs from 'fs'
+import { v2 as cloudinary } from "cloudinary";
 
 
 
@@ -9,11 +11,15 @@ import fs from 'fs'
 export const createNewspaper = async(req,res,next) => {
     try {
         const { title} = req.body;
-        let newPath = req.file.path;
-    
+        // let newPath = req.file.path;
+        const response = await uploadPdf(req.file.path)
+        console.log(response)
         await newspaper.create({
           title,
-          newspaper: newPath,
+          newspaper:{
+            url:response.secure_url,
+            public_id:response.public_id,
+          }
         });
         res.json({
           success: true,
@@ -43,10 +49,13 @@ export const getNewspapers = async (req, res, next) =>{
 
 export const deleteNewpaper = async (req, res, next) => {
   try {
-    const deleteNews = await newspaper.findByIdAndDelete(req.params.id);
-    fs.unlinkSync(`./${deleteNews.newspaper}`);
+    const deleteNewpaper = await newspaper.findByIdAndDelete(req.params.id);
+    // fs.unlinkSync(`./${deleteNews.newspaper}`);
 
-    if (!deleteNews) return next(new ErrorHandler("News Not Found", 404));
+    if (!deleteNewpaper) return next(new ErrorHandler("News Not Found", 404));
+
+    const {public_id} = deleteNewpaper.newspaper
+    cloudinary.uploader.destroy(public_id);
 
     res.status(200).json({
       success: true,

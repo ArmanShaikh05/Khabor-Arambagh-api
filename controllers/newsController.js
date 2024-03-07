@@ -1,6 +1,8 @@
+import { uploadOnCloudinary } from "../middlewares/cloudinary.js";
 import ErrorHandler from "../middlewares/error.js";
 import { news } from "../models/newsModel.js";
-import fs from "fs";
+// import fs from "fs";
+import { v2 as cloudinary } from "cloudinary";
 
 // CREATE NEWS POST
 
@@ -8,15 +10,17 @@ export const createNews = async (req, res, next) => {
   try {
     const { title, summary, content, category, section } = req.body;
     const file = req.file;
-    let newPath = "";
-    let extension = "";
-    if (file) {
-      const { originalname, path } = req.file;
-      const parts = originalname.split(".");
-      extension = parts[parts.length - 1];
-      newPath = path + "." + extension;
-      fs.renameSync(path, newPath);
-    }
+    // let newPath = "";
+    // let extension = "";
+    // if (file) {
+    //   const { originalname, path } = req.file;
+    //   const parts = originalname.split(".");
+    //   extension = parts[parts.length - 1];
+    //   newPath = path + "." + extension;
+    //   fs.renameSync(path, newPath);
+    // }
+
+    const response = await uploadOnCloudinary(file.path);
 
     await news.create({
       title,
@@ -24,7 +28,10 @@ export const createNews = async (req, res, next) => {
       content,
       category,
       section,
-      image: newPath,
+      image: {
+        url: response.secure_url,
+        public_id: response.public_id,
+      },
     });
     res.json({
       success: true,
@@ -38,17 +45,16 @@ export const createNews = async (req, res, next) => {
 // SHOW ALL THE NEWS IN DATABASE
 
 export const showAllNews = async (req, res, next) => {
-  const search = req.query.search ? req.query.search : ""
+  const search = req.query.search ? req.query.search : "";
   const limit = req.query.limit ? req.query.limit : null;
   const section = req.query.section ? req.query.section : "";
-  const category = req.query.category ? req.query.category : ""
+  const category = req.query.category ? req.query.category : "";
 
   const searchFilter = {
     section: { $regex: section, $options: "i" },
     category: { $regex: category, $options: "i" },
     title: { $regex: search, $options: "i" },
   };
-
 
   try {
     const postsData = await news
@@ -64,7 +70,6 @@ export const showAllNews = async (req, res, next) => {
     next(new ErrorHandler(error.message, 500));
   }
 };
-
 
 // SHOW SPECIFIC NEWS DATA
 
@@ -84,21 +89,33 @@ export const getSpecificData = async (req, res, next) => {
 
 export const updateNewsData = async (req, res, next) => {
   try {
-    let newPath = null;
+    // let newPath = null;
     const id = req.params.id;
     const { title, summary, content, category, section } = req.body;
     const file = req.file;
-    if (file) {
-      const { originalname, path } = req.file;
-      const parts = originalname.split(".");
-      const extension = parts[parts.length - 1];
-      newPath = path + "." + extension;
-      fs.renameSync(path, newPath);
-    }
+    // let response;
+    // if (file) {
+    //   const { originalname, path } = req.file;
+    //   const parts = originalname.split(".");
+    //   const extension = parts[parts.length - 1];
+    //   newPath = path + "." + extension;
+    //   fs.renameSync(path, newPath);
+    // }
 
     const newsDoc = await news.findById(id);
-
     if (!newsDoc) return next(new ErrorHandler("News Not Found", 404));
+
+    if (file) {
+     const response = await uploadOnCloudinary(file.path);
+      const { public_id } = newsDoc.image;
+      cloudinary.uploader.destroy(public_id);
+      await newsDoc.updateOne({
+        image: {
+          url: response.secure_url,
+          public_id: response.public_id,
+        },
+      });
+    }
 
     await newsDoc.updateOne({
       title,
@@ -106,7 +123,6 @@ export const updateNewsData = async (req, res, next) => {
       content,
       category,
       section,
-      image: newPath ? newPath : newsDoc.image,
     });
 
     res.status(200).json({
@@ -123,9 +139,12 @@ export const updateNewsData = async (req, res, next) => {
 export const deleteNews = async (req, res, next) => {
   try {
     const deleteNews = await news.findByIdAndDelete(req.params.id);
-    fs.unlinkSync(`./${deleteNews.image}`);
-
+    // fs.unlinkSync(`./${deleteNews.image}`);
     if (!deleteNews) return next(new ErrorHandler("News Not Found", 404));
+
+    const { public_id } = deleteNews.image;
+    cloudinary.uploader.destroy(public_id);
+
 
     res.status(200).json({
       success: true,

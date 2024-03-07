@@ -2,6 +2,3 @@
 
 /data/config.env
 
-/middlewares/cloudinary.js
-
-/middlewares/multer.js

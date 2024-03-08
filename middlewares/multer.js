@@ -1,13 +1,13 @@
 import multer from "multer";
-import { fileURLToPath } from 'url';
-import path, { dirname } from 'path';
+// import { fileURLToPath } from 'url';
+// import path, { dirname } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, path.join(__dirname, "/uploads"))
+      cb(null, '../uploads')
     },
     filename: function (req, file, cb) {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)

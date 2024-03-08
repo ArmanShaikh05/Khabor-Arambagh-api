@@ -29,7 +29,7 @@ server.use(cors({
 
 server.use(express.urlencoded({extended:true}))
 server.use(express.json())
-server.use('/uploads',express.static(__dirname + '/uploads'))
+server.use('/uploads',express.static('uploads'))
 server.use(ErrorMiddleware)
 
 

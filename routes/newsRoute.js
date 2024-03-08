@@ -1,9 +1,7 @@
 import express from "express"
 import { createNews, getSpecificData, showAllNews, updateNewsData , deleteNews, showCategoryNews} from "../controllers/newsController.js"
-// import  multer  from "multer"
 import { uploadMiddleware } from "../middlewares/multer.js"
 
-// const uploadMiddleware = multer({dest:'uploads/'})
 
 const router = express.Router()
 

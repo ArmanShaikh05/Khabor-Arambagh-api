@@ -22,7 +22,7 @@ connectDb()
 
 // USING MIDDLEWARES
 server.use(cors({
-    // origin:[process.env.FRONTEND_URL_1, process.env.FRONTEND_URL_2],
+    origin:[process.env.FRONTEND_URL_1, process.env.FRONTEND_URL_2],
     methods:["GET","PUT", "POST", "DELETE"],
     credentials:true
 }))

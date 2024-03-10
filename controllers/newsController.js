@@ -31,7 +31,6 @@ export const createNews = async (req, res, next) => {
     res.json({
       success:false,
       message: error.message,
-      file
     })
     next(new ErrorHandler(error.message, 500));
   }

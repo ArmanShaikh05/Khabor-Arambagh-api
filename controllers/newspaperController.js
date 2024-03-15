@@ -11,17 +11,19 @@ export const createNewspaper = async (req, res, next) => {
     const { title } = req.body;
     const response = await uploadPdf(req.file.path);
 
-    await newspaper.create({
-      title,
-      newspaper: {
-        url: response.secure_url,
-        public_id: response.public_id,
-      },
-    });
-    res.json({
-      success: true,
-      message: "News Created Successfully",
-    });
+    if (response) {
+      await newspaper.create({
+        title,
+        newspaper: {
+          url: response.secure_url,
+          public_id: response.public_id,
+        },
+      });
+      res.json({
+        success: true,
+        message: "News Created Successfully",
+      });
+    }
   } catch (error) {
     res.json({
       success: false,
